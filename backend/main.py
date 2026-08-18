@@ -3,6 +3,7 @@ import tempfile
 import subprocess
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 import imageio_ffmpeg
@@ -32,10 +33,7 @@ whisper_model = WhisperModel(
 
 @app.get("/")
 def home():
-    return {
-        "status": "online",
-        "service": "Myanmar Movie Recap AI"
-    }
+    return FileResponse("index.html")
 
 
 @app.get("/health")
