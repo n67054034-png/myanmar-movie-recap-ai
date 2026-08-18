@@ -66,6 +66,20 @@
             opacity: 0.5;
         }
 
+        .download {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #168f5b;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         .status {
             margin-top: 15px;
             color: #aaa;
@@ -92,6 +106,11 @@
 
         .error {
             color: #ff6464;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -168,6 +187,33 @@
 
     </div>
 
+
+    <div
+        id="ttsCard"
+        class="card hidden"
+    >
+
+        <h2>🔊 မြန်မာ AI အသံ</h2>
+
+        <div class="status">
+            မြန်မာ Recap ကို AI အသံအဖြစ် ပြောင်းပြီးပါပြီ။
+        </div>
+
+        <audio
+            id="audioPlayer"
+            controls
+        ></audio>
+
+        <a
+            id="downloadAudio"
+            class="download"
+            download="myanmar-recap.mp3"
+        >
+            ⬇️ MP3 Download
+        </a>
+
+    </div>
+
 </div>
 
 
@@ -190,11 +236,20 @@ async function startProcess() {
     const recapCard =
         document.getElementById("recapCard");
 
+    const ttsCard =
+        document.getElementById("ttsCard");
+
     const transcriptBox =
         document.getElementById("transcript");
 
     const recapBox =
         document.getElementById("recap");
+
+    const audioPlayer =
+        document.getElementById("audioPlayer");
+
+    const downloadAudio =
+        document.getElementById("downloadAudio");
 
 
     if (!fileInput.files.length) {
@@ -216,8 +271,8 @@ async function startProcess() {
     button.disabled = true;
 
     transcriptCard.classList.add("hidden");
-
     recapCard.classList.add("hidden");
+    ttsCard.classList.add("hidden");
 
 
     try {
@@ -266,7 +321,7 @@ async function startProcess() {
 
 
         const transcript =
-            transcribeData.text;
+            transcribeData.text || "";
 
 
         transcriptBox.textContent =
@@ -317,8 +372,12 @@ async function startProcess() {
         }
 
 
+        const recapText =
+            recapData.recap || "";
+
+
         recapBox.textContent =
-            recapData.recap;
+            recapText;
 
 
         recapCard.classList.remove(
@@ -326,8 +385,81 @@ async function startProcess() {
         );
 
 
+        // =========================
+        // STEP 3 — TTS
+        // =========================
+
         status.innerHTML =
-            "✅ Transcript နဲ့ မြန်မာ Recap အောင်မြင်ပါပြီ။";
+            "🔊 မြန်မာ AI အသံထုတ်နေပါတယ်...";
+
+
+        const ttsResponse =
+            await fetch(
+                "/tts",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        text: recapText
+                    })
+                }
+            );
+
+
+        if (!ttsResponse.ok) {
+
+            let errorMessage =
+                "TTS မအောင်မြင်ပါ";
+
+            try {
+
+                const errorData =
+                    await ttsResponse.json();
+
+                errorMessage =
+                    errorData.detail ||
+                    errorMessage;
+
+            } catch {
+
+            }
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+
+        const audioBlob =
+            await ttsResponse.blob();
+
+
+        const audioUrl =
+            URL.createObjectURL(
+                audioBlob
+            );
+
+
+        audioPlayer.src =
+            audioUrl;
+
+
+        downloadAudio.href =
+            audioUrl;
+
+
+        ttsCard.classList.remove(
+            "hidden"
+        );
+
+
+        status.innerHTML =
+            "✅ Transcript + Recap + မြန်မာ AI အသံ အောင်မြင်ပါပြီ။";
 
         status.className =
             "status success";
