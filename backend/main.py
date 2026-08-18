@@ -202,3 +202,73 @@ async def transcribe_video(
                 os.remove(audio_path)
             except Exception:
                 pass
+@app.post("/recap")
+async def create_recap(request: RecapRequest):
+
+    if groq_client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is not configured"
+        )
+
+    text = request.text.strip()
+
+    if not text:
+        raise HTTPException(
+            status_code=400,
+            detail="Transcript is empty"
+        )
+
+    try:
+
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+You are a professional Myanmar movie recap writer.
+
+Convert the English movie recap transcript
+into natural Burmese movie recap narration.
+
+Rules:
+- Write ONLY in Burmese.
+- Do not include English.
+- Keep the original story events accurate.
+- Do not invent events.
+- Do not translate word-for-word.
+- Rewrite naturally like a Myanmar movie recap narrator.
+- Make the narration smooth and easy to listen to.
+- Keep important story details.
+- Remove unnecessary repetition.
+- Do not use bullet points.
+- Write as continuous narration.
+"""
+                },
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ],
+            temperature=0.3,
+            max_tokens=4000
+        )
+
+        recap_text = (
+            response.choices[0]
+            .message.content
+            .strip()
+        )
+
+        return {
+            "success": True,
+            "recap": recap_text
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
