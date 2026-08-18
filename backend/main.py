@@ -272,3 +272,55 @@ Rules:
             status_code=500,
             detail=str(e)
         )
+@app.post("/tts")
+async def create_tts(request: RecapRequest):
+
+    text = request.text.strip()
+
+    if not text:
+        raise HTTPException(
+            status_code=400,
+            detail="Recap text is empty"
+        )
+
+    output_path = None
+
+    try:
+
+        output_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".mp3"
+        )
+
+        output_path = output_file.name
+        output_file.close()
+
+        communicate = edge_tts.Communicate(
+            text,
+            "my-MM-ThihaNeural",
+            rate="+0%",
+            volume="+0%",
+            pitch="+0Hz"
+        )
+
+        await communicate.save(output_path)
+
+        return FileResponse(
+            output_path,
+            media_type="audio/mpeg",
+            filename="myanmar-recap.mp3"
+        )
+
+    except Exception as e:
+
+        if output_path:
+
+            try:
+                os.remove(output_path)
+            except Exception:
+                pass
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
