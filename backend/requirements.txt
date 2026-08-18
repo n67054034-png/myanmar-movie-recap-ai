@@ -5,3 +5,4 @@ faster-whisper
 imageio-ffmpeg
 groq
 edge-tts
+azure-cognitiveservices-speech
