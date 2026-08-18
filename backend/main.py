@@ -9,7 +9,7 @@ from faster_whisper import WhisperModel
 import imageio_ffmpeg
 from groq import Groq
 from pydantic import BaseModel
-
+import edge_tts
 app = FastAPI(title="Myanmar Movie Recap AI")
 
 
