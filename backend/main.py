@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 import imageio_ffmpeg
 from groq import Groq
+from pydantic import BaseModel
 
 app = FastAPI(title="Myanmar Movie Recap AI")
 
@@ -29,7 +30,17 @@ whisper_model = WhisperModel(
     device="cpu",
     compute_type="int8"
 )
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+groq_client = (
+    Groq(api_key=GROQ_API_KEY)
+    if GROQ_API_KEY
+    else None
+)
+
+
+class RecapRequest(BaseModel):
+    text: str
 
 @app.get("/")
 def home():
