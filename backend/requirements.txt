@@ -4,3 +4,4 @@ python-multipart
 faster-whisper
 imageio-ffmpeg
 groq
+edge-tts
