@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 import imageio_ffmpeg
-
+from groq import Groq
 
 app = FastAPI(title="Myanmar Movie Recap AI")
 
