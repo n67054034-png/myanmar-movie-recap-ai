@@ -14,34 +14,31 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: #101010;
+            background: #111;
             color: white;
         }
 
         .container {
-            width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             margin: auto;
-            padding: 25px 18px;
+            padding: 25px 18px 50px;
         }
 
         h1 {
-            text-align: center;
-            font-size: 28px;
+            font-size: 34px;
             margin-bottom: 8px;
         }
 
         .subtitle {
-            text-align: center;
             color: #aaa;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .card {
-            background: #1b1b1b;
+            background: #1d1d1d;
             border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
         }
 
         input[type="file"] {
@@ -49,56 +46,52 @@
             padding: 15px;
             background: #292929;
             color: white;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid #444;
         }
 
         button {
             width: 100%;
-            margin-top: 18px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 16px;
             border: none;
             border-radius: 12px;
             background: #6c4cff;
             color: white;
-            font-size: 17px;
+            font-size: 18px;
             font-weight: bold;
         }
 
         button:disabled {
-            background: #444;
+            opacity: 0.5;
         }
 
         .status {
-            margin-top: 18px;
-            padding: 14px;
-            border-radius: 10px;
-            background: #252525;
-            color: #ccc;
-            display: none;
-        }
-
-        .result {
-            display: none;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 280px;
-            resize: vertical;
-            background: #101010;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 15px;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .info {
+            margin-top: 15px;
             color: #aaa;
-            font-size: 14px;
-            margin-bottom: 12px;
+        }
+
+        .box {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 18px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success {
+            color: #48e08b;
+        }
+
+        .error {
+            color: #ff6464;
         }
     </style>
 </head>
@@ -107,18 +100,15 @@
 
 <div class="container">
 
-    <h1>🎬 Myanmar Movie Recap AI</h1>
+    <h1>Myanmar Movie Recap AI</h1>
 
     <div class="subtitle">
-        နိုင်ငံခြား Recap Video ကို မြန်မာ Recap အဖြစ်ပြောင်းရန်
+        Video တင်ပြီး မြန်မာ Movie Recap အလိုအလျောက်ထုတ်ပါ
     </div>
-
 
     <div class="card">
 
-        <div class="info">
-            ပထမဆုံး စမ်းသပ်ရန် ၁ မိနစ်ဝန်းကျင် Video အသုံးပြုပါ။
-        </div>
+        <h2>🎬 Video ရွေးပါ</h2>
 
         <input
             type="file"
@@ -127,36 +117,54 @@
         >
 
         <button
-            id="generateBtn"
-            onclick="generateTranscript()"
+            id="startButton"
+            onclick="startProcess()"
         >
-            🎙️ Transcript ထုတ်မယ်
+            🚀 Recap စတင်မယ်
         </button>
 
         <div
-            class="status"
             id="status"
+            class="status"
+        >
+            Video ရွေးပြီး Recap စတင်မယ်ကို နှိပ်ပါ။
+        </div>
+
+    </div>
+
+
+    <div
+        id="transcriptCard"
+        class="card hidden"
+    >
+
+        <h2>📝 Transcript</h2>
+
+        <div
+            id="transcript"
+            class="box"
         ></div>
 
     </div>
 
 
     <div
-        class="card result"
-        id="result"
+        id="recapCard"
+        class="card hidden"
     >
 
-        <h3>📝 Transcript</h3>
+        <h2>🎙️ မြန်မာ Movie Recap</h2>
 
         <div
-            class="info"
-            id="videoInfo"
+            id="recap"
+            class="box"
         ></div>
 
-        <textarea
-            id="transcript"
-            readonly
-        ></textarea>
+        <button
+            onclick="copyRecap()"
+        >
+            📋 Recap Copy
+        </button>
 
     </div>
 
@@ -165,30 +173,37 @@
 
 <script>
 
-async function generateTranscript() {
+async function startProcess() {
 
     const fileInput =
         document.getElementById("videoFile");
 
     const button =
-        document.getElementById("generateBtn");
+        document.getElementById("startButton");
 
     const status =
         document.getElementById("status");
 
-    const result =
-        document.getElementById("result");
+    const transcriptCard =
+        document.getElementById("transcriptCard");
 
-    const transcript =
+    const recapCard =
+        document.getElementById("recapCard");
+
+    const transcriptBox =
         document.getElementById("transcript");
 
-    const videoInfo =
-        document.getElementById("videoInfo");
+    const recapBox =
+        document.getElementById("recap");
 
 
     if (!fileInput.files.length) {
 
-        alert("Video တစ်ပုဒ်ရွေးပါ။");
+        status.innerHTML =
+            "❌ Video တစ်ခုရွေးပေးပါ။";
+
+        status.className =
+            "status error";
 
         return;
     }
@@ -198,39 +213,36 @@ async function generateTranscript() {
         fileInput.files[0];
 
 
-    const formData =
-        new FormData();
-
-    formData.append(
-        "file",
-        file
-    );
-
-
     button.disabled = true;
 
-    button.innerText =
-        "⏳ Processing...";
+    transcriptCard.classList.add("hidden");
 
-
-    status.style.display =
-        "block";
-
-    status.innerText =
-        "Video ကို upload လုပ်နေပါတယ်...";
-
-
-    result.style.display =
-        "none";
+    recapCard.classList.add("hidden");
 
 
     try {
 
-        status.innerText =
-            "🎙️ Free Whisper နဲ့ အသံကို စာပြောင်းနေပါတယ်...";
+        // =========================
+        // STEP 1 — TRANSCRIBE
+        // =========================
+
+        status.innerHTML =
+            "🎙️ Video ကို Transcript ပြောင်းနေပါတယ်...";
+
+        status.className =
+            "status";
 
 
-        const response =
+        const formData =
+            new FormData();
+
+        formData.append(
+            "file",
+            file
+        );
+
+
+        const transcribeResponse =
             await fetch(
                 "/transcribe",
                 {
@@ -240,53 +252,132 @@ async function generateTranscript() {
             );
 
 
-        const data =
-            await response.json();
+        const transcribeData =
+            await transcribeResponse.json();
 
 
-        if (!response.ok) {
+        if (!transcribeResponse.ok) {
 
             throw new Error(
-                data.detail ||
-                "Transcription failed"
+                transcribeData.detail ||
+                "Transcript မအောင်မြင်ပါ"
             );
         }
 
 
-        transcript.value =
-            data.text || "";
+        const transcript =
+            transcribeData.text;
 
 
-        videoInfo.innerText =
-            "Language: " +
-            data.language +
-            " | Duration: " +
-            data.duration +
-            " seconds";
+        transcriptBox.textContent =
+            transcript;
 
 
-        result.style.display =
-            "block";
+        transcriptCard.classList.remove(
+            "hidden"
+        );
 
 
-        status.innerText =
-            "✅ Transcript ပြီးပါပြီ။";
+        // =========================
+        // STEP 2 — RECAP
+        // =========================
+
+        status.innerHTML =
+            "🤖 AI က မြန်မာ Movie Recap ရေးနေပါတယ်...";
+
+
+        const recapResponse =
+            await fetch(
+                "/recap",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        text: transcript
+                    })
+                }
+            );
+
+
+        const recapData =
+            await recapResponse.json();
+
+
+        if (!recapResponse.ok) {
+
+            throw new Error(
+                recapData.detail ||
+                "Recap မအောင်မြင်ပါ"
+            );
+        }
+
+
+        recapBox.textContent =
+            recapData.recap;
+
+
+        recapCard.classList.remove(
+            "hidden"
+        );
+
+
+        status.innerHTML =
+            "✅ Transcript နဲ့ မြန်မာ Recap အောင်မြင်ပါပြီ။";
+
+        status.className =
+            "status success";
 
 
     } catch (error) {
 
-        status.innerText =
-            "❌ Error: " +
-            error.message;
+        console.error(error);
+
+        status.innerHTML =
+            "❌ " + error.message;
+
+        status.className =
+            "status error";
+
+    } finally {
+
+        button.disabled = false;
 
     }
 
+}
 
-    button.disabled =
-        false;
 
-    button.innerText =
-        "🎙️ Transcript ထုတ်မယ်";
+async function copyRecap() {
+
+    const recap =
+        document.getElementById(
+            "recap"
+        ).textContent;
+
+
+    try {
+
+        await navigator.clipboard.writeText(
+            recap
+        );
+
+        alert(
+            "Recap ကို Copy လုပ်ပြီးပါပြီ။"
+        );
+
+    } catch {
+
+        alert(
+            "Copy မလုပ်နိုင်ပါ။ စာကို ဖိပြီး Copy လုပ်ပါ။"
+        );
+
+    }
+
 }
 
 </script>
