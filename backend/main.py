@@ -2,7 +2,7 @@ import os
 import tempfile
 import subprocess
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
@@ -694,3 +694,265 @@ async def create_tts(
                 )
             except Exception:
                 pass
+# =========================
+# CREATE FINAL RECAP VIDEO
+# =========================
+
+from fastapi import Form, BackgroundTasks
+
+
+@app.post("/create-video")
+async def create_recap_video(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    text: str = Form(...),
+    voice: str = Form("thiha"),
+    speed: float = Form(1.0)
+):
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No video uploaded"
+        )
+
+    if not text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Recap text is empty"
+        )
+
+    voices = {
+        "thiha": "my-MM-ThihaNeural",
+        "nilar": "my-MM-NilarNeural"
+    }
+
+    selected_voice = voices.get(
+        voice.lower()
+    )
+
+    if not selected_voice:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid voice"
+        )
+
+    input_path = None
+    audio_path = None
+    output_path = None
+
+    try:
+
+        # =========================
+        # SAVE ORIGINAL VIDEO
+        # =========================
+
+        suffix = (
+            os.path.splitext(
+                file.filename
+            )[1] or ".mp4"
+        )
+
+        video_temp = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=suffix
+        )
+
+        video_temp.write(
+            await file.read()
+        )
+
+        input_path = video_temp.name
+        video_temp.close()
+
+
+        # =========================
+        # CREATE AI VOICE
+        # =========================
+
+        audio_temp = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".mp3"
+        )
+
+        audio_path = audio_temp.name
+        audio_temp.close()
+
+
+        rate_percent = int(
+            (speed - 1.0) * 100
+        )
+
+        rate = f"{rate_percent:+d}%"
+
+
+        communicate = edge_tts.Communicate(
+            text,
+            selected_voice,
+            rate=rate,
+            volume="+0%",
+            pitch="+0Hz"
+        )
+
+
+        with open(
+            audio_path,
+            "wb"
+        ) as audio:
+
+            async for message in communicate.stream():
+
+                if message["type"] == "audio":
+
+                    audio.write(
+                        message["data"]
+                    )
+
+
+        # =========================
+        # FINAL MP4
+        # =========================
+
+        output_temp = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".mp4"
+        )
+
+        output_path = output_temp.name
+        output_temp.close()
+
+
+        ffmpeg = (
+            imageio_ffmpeg
+            .get_ffmpeg_exe()
+        )
+
+
+        subprocess.run(
+            [
+                ffmpeg,
+                "-y",
+
+                # Original video
+                "-stream_loop",
+                "-1",
+                "-i",
+                input_path,
+
+                # AI voice
+                "-i",
+                audio_path,
+
+                # Video only from original
+                "-map",
+                "0:v:0",
+
+                # AI audio only
+                "-map",
+                "1:a:0",
+
+                # Video
+                "-c:v",
+                "libx264",
+
+                "-preset",
+                "veryfast",
+
+                "-pix_fmt",
+                "yuv420p",
+
+                # Audio
+                "-c:a",
+                "aac",
+
+                "-b:a",
+                "192k",
+
+                # Match video length to AI voice
+                "-shortest",
+
+                output_path
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+
+        # =========================
+        # CLEANUP AFTER RESPONSE
+        # =========================
+
+        def cleanup():
+
+            for path in [
+                input_path,
+                audio_path,
+                output_path
+            ]:
+
+                if path:
+
+                    try:
+                        os.remove(path)
+
+                    except Exception:
+                        pass
+
+
+        background_tasks.add_task(
+            cleanup
+        )
+
+
+        return FileResponse(
+            output_path,
+            media_type="video/mp4",
+            filename="myanmar-recap-video.mp4"
+        )
+
+
+    except subprocess.CalledProcessError as e:
+
+        for path in [
+            input_path,
+            audio_path,
+            output_path
+        ]:
+
+            if path:
+
+                try:
+                    os.remove(path)
+
+                except Exception:
+                    pass
+
+
+        raise HTTPException(
+            status_code=500,
+            detail="FFmpeg failed to create recap video"
+        )
+
+
+    except Exception as e:
+
+        for path in [
+            input_path,
+            audio_path,
+            output_path
+        ]:
+
+            if path:
+
+                try:
+                    os.remove(path)
+
+                except Exception:
+                    pass
+
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
