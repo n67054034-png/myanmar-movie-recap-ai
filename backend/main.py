@@ -698,9 +698,6 @@ async def create_tts(
 # CREATE FINAL RECAP VIDEO
 # =========================
 
-from fastapi import Form, BackgroundTasks
-
-
 @app.post("/create-video")
 async def create_recap_video(
     background_tasks: BackgroundTasks,
@@ -737,6 +734,8 @@ async def create_recap_video(
             detail="Invalid voice"
         )
 
+    speed = max(0.8, min(speed, 1.3))
+
     input_path = None
     audio_path = None
     output_path = None
@@ -744,7 +743,9 @@ async def create_recap_video(
     try:
 
         # =========================
-        # SAVE ORIGINAL VIDEO
+        # SAVE VIDEO TO DISK
+        # WITHOUT LOADING WHOLE FILE
+        # INTO RAM
         # =========================
 
         suffix = (
@@ -758,11 +759,17 @@ async def create_recap_video(
             suffix=suffix
         )
 
-        video_temp.write(
-            await file.read()
-        )
-
         input_path = video_temp.name
+
+        while True:
+
+            chunk = await file.read(1024 * 1024)
+
+            if not chunk:
+                break
+
+            video_temp.write(chunk)
+
         video_temp.close()
 
 
@@ -778,13 +785,11 @@ async def create_recap_video(
         audio_path = audio_temp.name
         audio_temp.close()
 
-
-        rate_percent = int(
+        rate_percent = round(
             (speed - 1.0) * 100
         )
 
         rate = f"{rate_percent:+d}%"
-
 
         communicate = edge_tts.Communicate(
             text,
@@ -793,7 +798,6 @@ async def create_recap_video(
             volume="+0%",
             pitch="+0Hz"
         )
-
 
         with open(
             audio_path,
@@ -810,7 +814,7 @@ async def create_recap_video(
 
 
         # =========================
-        # FINAL MP4
+        # FINAL VIDEO
         # =========================
 
         output_temp = tempfile.NamedTemporaryFile(
@@ -821,66 +825,48 @@ async def create_recap_video(
         output_path = output_temp.name
         output_temp.close()
 
-
-        ffmpeg = (
-            imageio_ffmpeg
-            .get_ffmpeg_exe()
-        )
-
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
         subprocess.run(
             [
                 ffmpeg,
                 "-y",
 
-                # Original video
-                "-stream_loop",
-                "-1",
                 "-i",
                 input_path,
 
-                # AI voice
                 "-i",
                 audio_path,
 
-                # Video only from original
                 "-map",
                 "0:v:0",
 
-                # AI audio only
                 "-map",
                 "1:a:0",
 
-                # Video
+                # Keep original video
                 "-c:v",
-                "libx264",
+                "copy",
 
-                "-preset",
-                "veryfast",
-
-                "-pix_fmt",
-                "yuv420p",
-
-                # Audio
+                # Encode AI voice
                 "-c:a",
                 "aac",
 
                 "-b:a",
-                "192k",
+                "128k",
 
-                # Match video length to AI voice
                 "-shortest",
 
                 output_path
             ],
             check=True,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE
         )
 
 
         # =========================
-        # CLEANUP AFTER RESPONSE
+        # CLEANUP
         # =========================
 
         def cleanup():
@@ -899,11 +885,9 @@ async def create_recap_video(
                     except Exception:
                         pass
 
-
         background_tasks.add_task(
             cleanup
         )
-
 
         return FileResponse(
             output_path,
@@ -928,7 +912,6 @@ async def create_recap_video(
                 except Exception:
                     pass
 
-
         raise HTTPException(
             status_code=500,
             detail="FFmpeg failed to create recap video"
@@ -950,7 +933,6 @@ async def create_recap_video(
 
                 except Exception:
                     pass
-
 
         raise HTTPException(
             status_code=500,
