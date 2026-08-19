@@ -109,17 +109,14 @@ async def transcribe_video(
             detail="No file uploaded"
         )
 
-
     input_path = None
     audio_path = None
-
 
     try:
 
         suffix = os.path.splitext(
             file.filename
         )[1] or ".mp4"
-
 
         with tempfile.NamedTemporaryFile(
             delete=False,
@@ -132,12 +129,10 @@ async def transcribe_video(
 
             input_path = temp.name
 
-
         ffmpeg = (
             imageio_ffmpeg
             .get_ffmpeg_exe()
         )
-
 
         audio_temp = (
             tempfile.NamedTemporaryFile(
@@ -146,11 +141,8 @@ async def transcribe_video(
             )
         )
 
-
         audio_path = audio_temp.name
-
         audio_temp.close()
-
 
         subprocess.run(
             [
@@ -172,7 +164,6 @@ async def transcribe_video(
             stderr=subprocess.PIPE
         )
 
-
         segments, info = (
             whisper_model.transcribe(
                 audio_path,
@@ -181,22 +172,18 @@ async def transcribe_video(
             )
         )
 
-
         transcript = []
         timestamped_segments = []
-
 
         for segment in segments:
 
             text = segment.text.strip()
-
 
             if text:
 
                 transcript.append(
                     text
                 )
-
 
                 timestamped_segments.append(
                     {
@@ -211,7 +198,6 @@ async def transcribe_video(
                         "text": text
                     }
                 )
-
 
         return {
 
@@ -244,7 +230,6 @@ async def transcribe_video(
                 timestamped_segments
         }
 
-
     except subprocess.CalledProcessError:
 
         raise HTTPException(
@@ -252,14 +237,12 @@ async def transcribe_video(
             detail="FFmpeg failed to extract audio"
         )
 
-
     except Exception as e:
 
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
-
 
     finally:
 
@@ -271,7 +254,6 @@ async def transcribe_video(
                 )
             except Exception:
                 pass
-
 
         if audio_path:
 
@@ -299,9 +281,7 @@ async def create_recap(
             detail="GROQ_API_KEY is not configured"
         )
 
-
     text = request.text.strip()
-
 
     if not text:
 
@@ -309,7 +289,6 @@ async def create_recap(
             status_code=400,
             detail="Transcript is empty"
         )
-
 
     try:
 
@@ -365,7 +344,6 @@ Rules:
             )
         )
 
-
         recap_text = (
             response
             .choices[0]
@@ -374,7 +352,6 @@ Rules:
             .strip()
         )
 
-
         return {
 
             "success": True,
@@ -382,7 +359,6 @@ Rules:
             "recap":
                 recap_text
         }
-
 
     except Exception as e:
 
@@ -419,24 +395,20 @@ def format_srt_time(
         )
     )
 
-
     if milliseconds >= 1000:
 
         milliseconds = 0
         secs += 1
-
 
     if secs >= 60:
 
         secs = 0
         minutes += 1
 
-
     if minutes >= 60:
 
         minutes = 0
         hours += 1
-
 
     return (
         f"{hours:02d}:"
@@ -456,7 +428,6 @@ async def create_tts(
 ):
 
     text = request.text.strip()
-
 
     if not text:
 
@@ -479,13 +450,7 @@ async def create_tts(
     selected_voice = voices.get(
         request.voice.lower()
     )
-rate_percent = round(
-    (request.speed - 1.0) * 100
-)
 
-rate = (
-    f"{rate_percent:+d}%"
-)
 
     if not selected_voice:
 
@@ -493,6 +458,26 @@ rate = (
             status_code=400,
             detail="Invalid voice. Use thiha or nilar."
         )
+
+
+    # =========================
+    # SPEED
+    # =========================
+
+    speed = request.speed
+
+    if speed < 0.8:
+        speed = 0.8
+
+    if speed > 1.3:
+        speed = 1.3
+
+
+    rate_percent = round(
+        (speed - 1.0) * 100
+    )
+
+    rate = f"{rate_percent:+d}%"
 
 
     audio_path = None
@@ -525,23 +510,19 @@ rate = (
         srt_file.close()
 
 
-        speed = request.speed
+        # =========================
+        # EDGE TTS
+        # =========================
 
-rate_percent = int(
-    (speed - 1.0) * 100
-)
-
-rate = f"{rate_percent:+d}%"
-
-communicate = (
-    edge_tts.Communicate(
-        text,
-        selected_voice,
-        rate=rate,
-        volume="+0%",
-        pitch="+0Hz"
-    )
-)
+        communicate = (
+            edge_tts.Communicate(
+                text,
+                selected_voice,
+                rate=rate,
+                volume="+0%",
+                pitch="+0Hz"
+            )
+        )
 
 
         subtitles = []
@@ -638,8 +619,9 @@ communicate = (
                 )
 
 
-        # Read files into memory
-        # before deleting temp files
+        # =========================
+        # READ FILES
+        # =========================
 
         with open(
             audio_path,
@@ -667,6 +649,12 @@ communicate = (
 
             "voice":
                 request.voice,
+
+            "speed":
+                speed,
+
+            "rate":
+                rate,
 
             "audio":
                 audio_data.hex(),
