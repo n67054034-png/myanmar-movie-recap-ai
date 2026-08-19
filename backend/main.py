@@ -92,7 +92,6 @@ def health():
         "status": "ok"
     }
 
-
 # =========================
 # TRANSCRIBE
 # =========================
@@ -118,23 +117,31 @@ async def transcribe_video(
             file.filename
         )[1] or ".mp4"
 
+        # =========================
+        # SAVE VIDEO IN 1MB CHUNKS
+        # =========================
+
         with tempfile.NamedTemporaryFile(
-    delete=False,
-    suffix=suffix
-) as temp:
+            delete=False,
+            suffix=suffix
+        ) as temp:
 
-    input_path = temp.name
+            input_path = temp.name
 
-    while True:
+            while True:
 
-        chunk = await file.read(
-            1024 * 1024
-        )
+                chunk = await file.read(
+                    1024 * 1024
+                )
 
-        if not chunk:
-            break
+                if not chunk:
+                    break
 
-        temp.write(chunk)
+                temp.write(chunk)
+
+        # =========================
+        # EXTRACT AUDIO
+        # =========================
 
         ffmpeg = (
             imageio_ffmpeg
@@ -167,9 +174,13 @@ async def transcribe_video(
                 audio_path
             ],
             check=True,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE
         )
+
+        # =========================
+        # WHISPER
+        # =========================
 
         segments, info = (
             whisper_model.transcribe(
@@ -188,9 +199,7 @@ async def transcribe_video(
 
             if text:
 
-                transcript.append(
-                    text
-                )
+                transcript.append(text)
 
                 timestamped_segments.append(
                     {
@@ -256,18 +265,14 @@ async def transcribe_video(
         if input_path:
 
             try:
-                os.remove(
-                    input_path
-                )
+                os.remove(input_path)
             except Exception:
                 pass
 
         if audio_path:
 
             try:
-                os.remove(
-                    audio_path
-                )
+                os.remove(audio_path)
             except Exception:
                 pass
 
