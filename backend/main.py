@@ -119,15 +119,22 @@ async def transcribe_video(
         )[1] or ".mp4"
 
         with tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=suffix
-        ) as temp:
+    delete=False,
+    suffix=suffix
+) as temp:
 
-            temp.write(
-                await file.read()
-            )
+    input_path = temp.name
 
-            input_path = temp.name
+    while True:
+
+        chunk = await file.read(
+            1024 * 1024
+        )
+
+        if not chunk:
+            break
+
+        temp.write(chunk)
 
         ffmpeg = (
             imageio_ffmpeg
