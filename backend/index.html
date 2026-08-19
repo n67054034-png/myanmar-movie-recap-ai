@@ -13,7 +13,11 @@
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family:
+                "Noto Sans Myanmar",
+                "Myanmar Text",
+                Arial,
+                sans-serif;
             background: #111;
             color: white;
         }
@@ -21,16 +25,17 @@
         .container {
             max-width: 800px;
             margin: auto;
-            padding: 25px 18px 50px;
+            padding: 25px 18px 60px;
         }
 
         h1 {
-            font-size: 34px;
+            font-size: 32px;
             margin-bottom: 8px;
         }
 
         .subtitle {
             color: #aaa;
+            line-height: 1.8;
             margin-bottom: 25px;
         }
 
@@ -66,23 +71,10 @@
             opacity: 0.5;
         }
 
-        .download {
-            display: block;
-            width: 100%;
-            margin-top: 15px;
-            padding: 16px;
-            border-radius: 12px;
-            background: #168f5b;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
         .status {
             margin-top: 15px;
             color: #aaa;
+            line-height: 1.8;
         }
 
         .box {
@@ -91,7 +83,7 @@
             border-radius: 12px;
             padding: 18px;
             white-space: pre-wrap;
-            line-height: 1.8;
+            line-height: 1.9;
             max-height: 450px;
             overflow-y: auto;
         }
@@ -108,6 +100,42 @@
             color: #ff6464;
         }
 
+        .voice-title {
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        .voice-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #292929;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .voice-option input {
+            width: 20px;
+            height: 20px;
+        }
+
+        .voice-name {
+            font-size: 17px;
+        }
+
+        .voice-description {
+            color: #999;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .download-btn {
+            background: #333;
+        }
+
         audio {
             width: 100%;
             margin-top: 15px;
@@ -119,11 +147,17 @@
 
 <div class="container">
 
-    <h1>Myanmar Movie Recap AI</h1>
+    <h1>🎬 Myanmar Movie Recap AI</h1>
 
     <div class="subtitle">
-        Video တင်ပြီး မြန်မာ Movie Recap အလိုအလျောက်ထုတ်ပါ
+        Video တင်ပြီး မြန်မာ Movie Recap ပြောင်းပါ။
+        ပြီးရင် ကိုယ်ကြိုက်တဲ့ မြန်မာအသံနဲ့ MP3 နဲ့ SRT ထုတ်နိုင်ပါတယ်။
     </div>
+
+
+    <!-- ========================= -->
+    <!-- VIDEO -->
+    <!-- ========================= -->
 
     <div class="card">
 
@@ -137,7 +171,6 @@
 
         <button
             id="startButton"
-            onclick="startProcess()"
         >
             🚀 Recap စတင်မယ်
         </button>
@@ -151,6 +184,10 @@
 
     </div>
 
+
+    <!-- ========================= -->
+    <!-- TRANSCRIPT -->
+    <!-- ========================= -->
 
     <div
         id="transcriptCard"
@@ -167,6 +204,10 @@
     </div>
 
 
+    <!-- ========================= -->
+    <!-- RECAP -->
+    <!-- ========================= -->
+
     <div
         id="recapCard"
         class="card hidden"
@@ -179,38 +220,111 @@
             class="box"
         ></div>
 
+
+        <!-- ========================= -->
+        <!-- VOICE -->
+        <!-- ========================= -->
+
+        <h2 class="voice-title">
+            🔊 အသံရွေးပါ
+        </h2>
+
+
+        <label class="voice-option">
+
+            <input
+                type="radio"
+                name="voice"
+                value="thiha"
+                checked
+            >
+
+            <div>
+
+                <div class="voice-name">
+                    👨 Male — Thiha
+                </div>
+
+                <div class="voice-description">
+                    မြန်မာ အမျိုးသားအသံ
+                </div>
+
+            </div>
+
+        </label>
+
+
+        <label class="voice-option">
+
+            <input
+                type="radio"
+                name="voice"
+                value="nilar"
+            >
+
+            <div>
+
+                <div class="voice-name">
+                    👩 Female — Nilar
+                </div>
+
+                <div class="voice-description">
+                    မြန်မာ အမျိုးသမီးအသံ
+                </div>
+
+            </div>
+
+        </label>
+
+
         <button
-            onclick="copyRecap()"
+            id="ttsButton"
         >
-            📋 Recap Copy
+            🔊 ရွေးထားတဲ့အသံနဲ့ အသံထုတ်မယ်
         </button>
 
-    </div>
+
+        <div
+            id="ttsStatus"
+            class="status"
+        ></div>
 
 
-    <div
-        id="ttsCard"
-        class="card hidden"
-    >
-
-        <h2>🔊 မြန်မာ AI အသံ</h2>
-
-        <div class="status">
-            မြန်မာ Recap ကို AI အသံအဖြစ် ပြောင်းပြီးပါပြီ။
-        </div>
+        <!-- AUDIO PLAYER -->
 
         <audio
             id="audioPlayer"
             controls
+            class="hidden"
         ></audio>
 
-        <a
-            id="downloadAudio"
-            class="download"
-            download="myanmar-recap.mp3"
+
+        <!-- DOWNLOAD MP3 -->
+
+        <button
+            id="downloadAudioButton"
+            class="download-btn hidden"
         >
-            ⬇️ MP3 Download
-        </a>
+            🎵 MP3 ရယူမယ်
+        </button>
+
+
+        <!-- DOWNLOAD SRT -->
+
+        <button
+            id="downloadSrtButton"
+            class="download-btn hidden"
+        >
+            📄 SRT ရယူမယ်
+        </button>
+
+
+        <button
+            id="copyButton"
+            class="download-btn"
+        >
+            📋 Recap Copy
+        </button>
 
     </div>
 
@@ -219,37 +333,67 @@
 
 <script>
 
+const startButton =
+    document.getElementById(
+        "startButton"
+    );
+
+const ttsButton =
+    document.getElementById(
+        "ttsButton"
+    );
+
+const copyButton =
+    document.getElementById(
+        "copyButton"
+    );
+
+
+let audioBlob = null;
+let srtText = "";
+
+
+/* =================================
+   START RECAP
+================================= */
+
+startButton.addEventListener(
+    "click",
+    startProcess
+);
+
+
 async function startProcess() {
 
     const fileInput =
-        document.getElementById("videoFile");
-
-    const button =
-        document.getElementById("startButton");
+        document.getElementById(
+            "videoFile"
+        );
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
     const transcriptCard =
-        document.getElementById("transcriptCard");
+        document.getElementById(
+            "transcriptCard"
+        );
 
     const recapCard =
-        document.getElementById("recapCard");
-
-    const ttsCard =
-        document.getElementById("ttsCard");
+        document.getElementById(
+            "recapCard"
+        );
 
     const transcriptBox =
-        document.getElementById("transcript");
+        document.getElementById(
+            "transcript"
+        );
 
     const recapBox =
-        document.getElementById("recap");
-
-    const audioPlayer =
-        document.getElementById("audioPlayer");
-
-    const downloadAudio =
-        document.getElementById("downloadAudio");
+        document.getElementById(
+            "recap"
+        );
 
 
     if (!fileInput.files.length) {
@@ -268,21 +412,25 @@ async function startProcess() {
         fileInput.files[0];
 
 
-    button.disabled = true;
+    startButton.disabled = true;
 
-    transcriptCard.classList.add("hidden");
-    recapCard.classList.add("hidden");
-    ttsCard.classList.add("hidden");
+    transcriptCard.classList.add(
+        "hidden"
+    );
+
+    recapCard.classList.add(
+        "hidden"
+    );
 
 
     try {
 
-        // =========================
-        // STEP 1 — TRANSCRIBE
-        // =========================
+        /* =========================
+           STEP 1
+        ========================= */
 
         status.innerHTML =
-            "🎙️ Video ကို Transcript ပြောင်းနေပါတယ်...";
+            "🎙️ Video ကို အသံစာသားပြောင်းနေပါတယ်...";
 
         status.className =
             "status";
@@ -320,12 +468,8 @@ async function startProcess() {
         }
 
 
-        const transcript =
-            transcribeData.text || "";
-
-
         transcriptBox.textContent =
-            transcript;
+            transcribeData.text || "";
 
 
         transcriptCard.classList.remove(
@@ -333,9 +477,9 @@ async function startProcess() {
         );
 
 
-        // =========================
-        // STEP 2 — RECAP
-        // =========================
+        /* =========================
+           STEP 2
+        ========================= */
 
         status.innerHTML =
             "🤖 AI က မြန်မာ Movie Recap ရေးနေပါတယ်...";
@@ -353,7 +497,8 @@ async function startProcess() {
                     },
 
                     body: JSON.stringify({
-                        text: transcript
+                        text:
+                            transcribeData.text
                     })
                 }
             );
@@ -372,12 +517,8 @@ async function startProcess() {
         }
 
 
-        const recapText =
-            recapData.recap || "";
-
-
         recapBox.textContent =
-            recapText;
+            recapData.recap || "";
 
 
         recapCard.classList.remove(
@@ -385,81 +526,8 @@ async function startProcess() {
         );
 
 
-        // =========================
-        // STEP 3 — TTS
-        // =========================
-
         status.innerHTML =
-            "🔊 မြန်မာ AI အသံထုတ်နေပါတယ်...";
-
-
-        const ttsResponse =
-            await fetch(
-                "/tts",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        text: recapText
-                    })
-                }
-            );
-
-
-        if (!ttsResponse.ok) {
-
-            let errorMessage =
-                "TTS မအောင်မြင်ပါ";
-
-            try {
-
-                const errorData =
-                    await ttsResponse.json();
-
-                errorMessage =
-                    errorData.detail ||
-                    errorMessage;
-
-            } catch {
-
-            }
-
-            throw new Error(
-                errorMessage
-            );
-        }
-
-
-        const audioBlob =
-            await ttsResponse.blob();
-
-
-        const audioUrl =
-            URL.createObjectURL(
-                audioBlob
-            );
-
-
-        audioPlayer.src =
-            audioUrl;
-
-
-        downloadAudio.href =
-            audioUrl;
-
-
-        ttsCard.classList.remove(
-            "hidden"
-        );
-
-
-        status.innerHTML =
-            "✅ Transcript + Recap + မြန်မာ AI အသံ အောင်မြင်ပါပြီ။";
+            "✅ Transcript + မြန်မာ Recap ပြီးပါပြီ။";
 
         status.className =
             "status success";
@@ -477,40 +545,340 @@ async function startProcess() {
 
     } finally {
 
-        button.disabled = false;
-
+        startButton.disabled =
+            false;
     }
-
 }
 
 
-async function copyRecap() {
+/* =================================
+   TTS
+================================= */
+
+ttsButton.addEventListener(
+    "click",
+    createTTS
+);
+
+
+async function createTTS() {
 
     const recap =
         document.getElementById(
             "recap"
-        ).textContent;
+        ).textContent.trim();
+
+
+    const ttsStatus =
+        document.getElementById(
+            "ttsStatus"
+        );
+
+
+    const audioPlayer =
+        document.getElementById(
+            "audioPlayer"
+        );
+
+
+    const downloadAudioButton =
+        document.getElementById(
+            "downloadAudioButton"
+        );
+
+
+    const downloadSrtButton =
+        document.getElementById(
+            "downloadSrtButton"
+        );
+
+
+    if (!recap) {
+
+        ttsStatus.innerHTML =
+            "❌ Recap စာမရှိသေးပါ။";
+
+        ttsStatus.className =
+            "status error";
+
+        return;
+    }
+
+
+    const selectedVoice =
+        document.querySelector(
+            'input[name="voice"]:checked'
+        ).value;
+
+
+    ttsButton.disabled = true;
+
+
+    ttsStatus.innerHTML =
+        "🔊 အသံထုတ်နေပါတယ်... ခဏစောင့်ပါ။";
+
+    ttsStatus.className =
+        "status";
+
+
+    audioPlayer.classList.add(
+        "hidden"
+    );
+
+    downloadAudioButton.classList.add(
+        "hidden"
+    );
+
+    downloadSrtButton.classList.add(
+        "hidden"
+    );
 
 
     try {
 
-        await navigator.clipboard.writeText(
-            recap
+        const response =
+            await fetch(
+                "/tts",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        text: recap,
+
+                        voice:
+                            selectedVoice
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "TTS မအောင်မြင်ပါ"
+            );
+        }
+
+
+        /*
+         * Backend က MP3 ကို hex
+         * အနေနဲ့ ပြန်ပေးထားတာကို
+         * browser Blob ပြန်လုပ်ခြင်း
+         */
+
+        const hex =
+            data.audio;
+
+
+        const bytes =
+            new Uint8Array(
+                hex.length / 2
+            );
+
+
+        for (
+            let i = 0;
+            i < hex.length;
+            i += 2
+        ) {
+
+            bytes[i / 2] =
+                parseInt(
+                    hex.substring(
+                        i,
+                        i + 2
+                    ),
+                    16
+                );
+        }
+
+
+        audioBlob =
+            new Blob(
+                [bytes],
+                {
+                    type:
+                        "audio/mpeg"
+                }
+            );
+
+
+        const audioURL =
+            URL.createObjectURL(
+                audioBlob
+            );
+
+
+        audioPlayer.src =
+            audioURL;
+
+
+        audioPlayer.classList.remove(
+            "hidden"
         );
 
-        alert(
-            "Recap ကို Copy လုပ်ပြီးပါပြီ။"
+
+        /* =========================
+           MP3 DOWNLOAD
+        ========================= */
+
+        downloadAudioButton.classList.remove(
+            "hidden"
         );
 
-    } catch {
 
-        alert(
-            "Copy မလုပ်နိုင်ပါ။ စာကို ဖိပြီး Copy လုပ်ပါ။"
+        downloadAudioButton.onclick =
+            function () {
+
+                const link =
+                    document.createElement(
+                        "a"
+                    );
+
+                link.href =
+                    audioURL;
+
+                link.download =
+                    "myanmar-recap-" +
+                    selectedVoice +
+                    ".mp3";
+
+                link.click();
+            };
+
+
+        /* =========================
+           SRT
+        ========================= */
+
+        srtText =
+            data.srt || "";
+
+
+        downloadSrtButton.classList.remove(
+            "hidden"
         );
 
+
+        downloadSrtButton.onclick =
+            function () {
+
+                const blob =
+                    new Blob(
+                        [srtText],
+                        {
+                            type:
+                                "text/plain;charset=utf-8"
+                        }
+                    );
+
+
+                const url =
+                    URL.createObjectURL(
+                        blob
+                    );
+
+
+                const link =
+                    document.createElement(
+                        "a"
+                    );
+
+                link.href =
+                    url;
+
+                link.download =
+                    "myanmar-recap-" +
+                    selectedVoice +
+                    ".srt";
+
+                link.click();
+
+
+                URL.revokeObjectURL(
+                    url
+                );
+            };
+
+
+        ttsStatus.innerHTML =
+            "✅ " +
+            (
+                selectedVoice ===
+                "thiha"
+                    ? "Thiha"
+                    : "Nilar"
+            ) +
+            " အသံနဲ့ MP3 + SRT ပြီးပါပြီ။";
+
+        ttsStatus.className =
+            "status success";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        ttsStatus.innerHTML =
+            "❌ " +
+            error.message;
+
+        ttsStatus.className =
+            "status error";
+
+    } finally {
+
+        ttsButton.disabled =
+            false;
     }
-
 }
+
+
+/* =================================
+   COPY
+================================= */
+
+copyButton.addEventListener(
+    "click",
+    async function () {
+
+        const recap =
+            document.getElementById(
+                "recap"
+            ).textContent;
+
+
+        try {
+
+            await navigator.clipboard
+                .writeText(
+                    recap
+                );
+
+            alert(
+                "Recap ကို Copy လုပ်ပြီးပါပြီ။"
+            );
+
+        } catch {
+
+            alert(
+                "စာကို ဖိပြီး Copy လုပ်ပါ။"
+            );
+        }
+    }
+);
 
 </script>
 
