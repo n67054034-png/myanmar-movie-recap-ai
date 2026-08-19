@@ -66,6 +66,7 @@ class RecapRequest(BaseModel):
 class TTSRequest(BaseModel):
     text: str
     voice: str = "thiha"
+    speed: float = 1.0
 
 
 # =========================
@@ -518,15 +519,23 @@ async def create_tts(
         srt_file.close()
 
 
-        communicate = (
-            edge_tts.Communicate(
-                text,
-                selected_voice,
-                rate="+0%",
-                volume="+0%",
-                pitch="+0Hz"
-            )
-        )
+        speed = request.speed
+
+rate_percent = int(
+    (speed - 1.0) * 100
+)
+
+rate = f"{rate_percent:+d}%"
+
+communicate = (
+    edge_tts.Communicate(
+        text,
+        selected_voice,
+        rate=rate,
+        volume="+0%",
+        pitch="+0Hz"
+    )
+)
 
 
         subtitles = []
