@@ -479,7 +479,13 @@ async def create_tts(
     selected_voice = voices.get(
         request.voice.lower()
     )
+rate_percent = round(
+    (request.speed - 1.0) * 100
+)
 
+rate = (
+    f"{rate_percent:+d}%"
+)
 
     if not selected_voice:
 
